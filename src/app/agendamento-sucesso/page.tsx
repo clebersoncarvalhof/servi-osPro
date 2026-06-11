@@ -2,23 +2,26 @@
 
 import Navbar from "@/components/navbar";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, Suspense, useState } from "react"; // 1. Importe o useState
 import { useSearchParams } from "next/navigation";
 
-export default function BookingSuccess() {
-  // Hook do Next.js para pegar os dados reais vindos da URL
+function BookingSuccessContent() {
   const searchParams = useSearchParams();
 
-  // Captura cada informação ou define um valor padrão caso não exista
   const nomeCliente = searchParams.get("nome") || "Cliente";
   const telefoneCliente = searchParams.get("telefone") || "11999999999";
   const servico = searchParams.get("servico") || "Serviço Selecionado";
   const dataHora = searchParams.get("dataHora") || "Horário Agendado";
   const local = searchParams.get("local") || "Studio D´Luxo";
-  const protocolo = searchParams.get("protocolo") || "#PRO-" + Math.floor(100000 + Math.random() * 900000);
+  
+  // 2. Estado para o protocolo começar com um texto padrão seguro e idêntico
+  const [protocolo, setProtocolo] = useState("#PRO-CARREGANDO");
 
   useEffect(() => {
-    // Só dispara se houver dados reais na URL para não abrir em acessos diretos inválidos
+    // 3. Define o protocolo aleatório ou o da URL apenas após a página carregar no navegador
+    const protocoloFinal = searchParams.get("protocolo") || "#PRO-" + Math.floor(100000 + Math.random() * 900000);
+    setProtocolo(protocoloFinal);
+
     if (!searchParams.get("nome")) return;
 
     const telefoneLimpo = telefoneCliente.replace(/\D/g, "");
@@ -27,7 +30,7 @@ export default function BookingSuccess() {
                           'Seu agendamento no *' + local + '* foi realizado com sucesso! 🎉\n\n' +
                           '📌 *Serviço:* ' + servico + '\n' +
                           '📅 *Data e Hora:* ' + dataHora + '\n' +
-                          '🆔 *Protocolo:* ' + protocolo + '\n\n' +
+                          '🆔 *Protocolo:* ' + protocoloFinal + '\n\n' +
                           'Te esperamos lá! 💈';
 
     const textoMensagem = encodeURIComponent(mensagemTexto);
@@ -36,7 +39,9 @@ export default function BookingSuccess() {
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
     }
-  }, [searchParams, nomeCliente, telefoneCliente, local, servico, dataHora, protocolo]);
+  }, [searchParams, nomeCliente, telefoneCliente, local, servico, dataHora]); // Removido o protocolo daqui para evitar loops
+
+  // ... restante do return JSX continua exatamente igual ...
 
   return (
     <main className="bg-black min-h-screen text-white">
