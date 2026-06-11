@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  OWNER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String?
+  email     String    @unique
+  password  String
+  role      Role      @default(CLIENT)
+  salons    Salon[]   @relation("SalonOwner")
+  bookings  Booking[] @relation("ClientBookings")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Salon {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  address     String
+  city        String
+  image       String?
+  category    String    @default("Cabeleireiro")
+  ownerId     String
+  owner       User      @relation("SalonOwner", fields: [ownerId], references: [id])
+  services    Service[]
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Service {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  duration    Int
+  salonId     String
+  salon       Salon     @relation(fields: [salonId], references: [id])
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Booking {
+  id        String        @id @default(cuid())
+  dateTime  DateTime
+  status    BookingStatus @default(PENDING)
+  clientId  String
+  client    User          @relation("ClientBookings", fields: [clientId], references: [id])
+  salonId   String
+  salon     Salon         @relation(fields: [salonId], references: [id])
+  serviceId String
+  service   Service       @relation(fields: [serviceId], references: [id])
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}

@@ -1,0 +1,60 @@
+export const CATEGORIES = [
+  { id: "cabelo", name: "Cabelo", icon: "✂️" },
+  { id: "barba", name: "Barba", icon: "🧔" },
+  { id: "manicure", name: "Manicure", icon: "💅" },
+  { id: "estetica", name: "Estética", icon: "✨" },
+  { id: "sobrancelha", name: "Sobrancelha", icon: "👁️" },
+];
+
+export const SALONS = [
+  {
+    id: "1",
+    name: "Studio D´Luxo",
+    category: "Cabelo",
+    address: "Rua das Flores, 123",
+    city: "São Paulo",
+    rating: 4.9,
+    status: "Aberto agora",
+    featured: true,
+    image: "/mock/salon1.jpg",
+    description: "Um estúdio moderno focado em cortes de cabelo contemporâneos e barboterapia premium. Nossos profissionais são especialistas em visagismo.",
+    services: [
+      { id: "s1", name: "Corte Masculino", price: 45.0, duration: 40 },
+      { id: "s2", name: "Corte + Barba", price: 75.0, duration: 60 },
+      { id: "s3", name: "Barba Completa", price: 35.0, duration: 30 },
+      { id: "s4", name: "Penteado Especial", price: 120.0, duration: 90 },
+    ],
+  },
+  {
+    id: "2",
+    name: "Barber King",
+    category: "Barba",
+    address: "Av. Paulista, 1000",
+    city: "São Paulo",
+    rating: 4.8,
+    status: "Aberto agora",
+    featured: true,
+    image: "/mock/salon2.jpg",
+    description: "A realeza do cuidado masculino no coração de São Paulo. Experiência única com toalhas quentes e bebidas artesanais.",
+    services: [
+      { id: "s5", name: "Barba Tradicional", price: 40.0, duration: 30 },
+      { id: "s6", name: "Corte Designer", price: 60.0, duration: 45 },
+    ],
+  },
+  {
+    id: "3",
+    name: "Estética Bella",
+    category: "Estética",
+    address: "Rua Augusta, 456",
+    city: "São Paulo",
+    rating: 4.7,
+    status: "Fechado",
+    featured: true,
+    image: "/mock/salon3.jpg",
+    description: "Referência em tratamentos estéticos faciais e corporais. Sinta-se radiante com nossos especialistas.",
+    services: [
+      { id: "s7", name: "Limpeza de Pele", price: 150.0, duration: 90 },
+      { id: "s8", name: "Peeling de Caviar", price: 300.0, duration: 60 },
+    ],
+  },
+];
