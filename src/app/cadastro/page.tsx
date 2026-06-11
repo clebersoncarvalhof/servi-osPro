@@ -4,6 +4,15 @@ import { useState } from "react";
 import Navbar from "@/components/navbar";
 import { useRouter } from "next/navigation";
 import { saveSalonRequest } from "@/lib/storage";
+// Função para formatar o telefone enquanto o usuário digita
+const formatPhoneNumber = (value: string) => {
+  if (!value) return "";
+  const phone = value.replace(/\D/g, "");
+  if (phone.length <= 10) {
+    return phone.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  }
+  return phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+};
 
 export default function Register() {
   const [formData, setFormData] = useState({
