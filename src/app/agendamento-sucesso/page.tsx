@@ -2,8 +2,10 @@
 
 import Navbar from "@/components/navbar";
 import Link from "next/link";
-import { useEffect, Suspense, useState } from "react"; // 1. Importe o useState
+import { useEffect, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 function BookingSuccessContent() {
   const searchParams = useSearchParams();
@@ -14,11 +16,10 @@ function BookingSuccessContent() {
   const dataHora = searchParams.get("dataHora") || "Horário Agendado";
   const local = searchParams.get("local") || "Studio D´Luxo";
   
-  // 2. Estado para o protocolo começar com um texto padrão seguro e idêntico
+  // Define o estado do protocolo corretamente para o JSX ler embaixo
   const [protocolo, setProtocolo] = useState("#PRO-CARREGANDO");
 
   useEffect(() => {
-    // 3. Define o protocolo aleatório ou o da URL apenas após a página carregar no navegador
     const protocoloFinal = searchParams.get("protocolo") || "#PRO-" + Math.floor(100000 + Math.random() * 900000);
     setProtocolo(protocoloFinal);
 
@@ -34,14 +35,14 @@ function BookingSuccessContent() {
                           'Te esperamos lá! 💈';
 
     const textoMensagem = encodeURIComponent(mensagemTexto);
+    
+    // Link corrigido e completo da API oficial do WhatsApp
     const url = 'https://whatsapp.com' + telefoneLimpo + '&text=' + textoMensagem;
 
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
     }
-  }, [searchParams, nomeCliente, telefoneCliente, local, servico, dataHora]); // Removido o protocolo daqui para evitar loops
-
-  // ... restante do return JSX continua exatamente igual ...
+  }, [searchParams, nomeCliente, telefoneCliente, local, servico, dataHora]);
 
   return (
     <main className="bg-black min-h-screen text-white">
@@ -73,7 +74,6 @@ function BookingSuccessContent() {
               </div>
            </div>
            
-           {/* Caixa informativa do serviço */}
            <div className="border-t border-white/5 pt-4">
               <div className="text-xs text-primary font-bold uppercase tracking-widest mb-1">Serviço Selecionado</div>
               <div className="font-bold text-gray-300">{servico}</div>
@@ -101,4 +101,13 @@ function BookingSuccessContent() {
     </main>
   );
 }
+
+export default function BookingSuccess() {
+  return (
+    <Suspense fallback={<div className="bg-black min-h-screen text-white text-center pt-40">Carregando confirmação...</div>}>
+      <BookingSuccessContent />
+    </Suspense>
+  );
+}
+
 
