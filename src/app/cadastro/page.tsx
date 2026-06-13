@@ -4,15 +4,8 @@ import { useState } from "react";
 import Navbar from "@/components/navbar";
 import { useRouter } from "next/navigation";
 import { saveSalonRequest } from "@/lib/storage";
-// Função para formatar o telefone enquanto o usuário digita
-const formatPhoneNumber = (value: string) => {
-  if (!value) return "";
-  const phone = value.replace(/\D/g, "");
-  if (phone.length <= 10) {
-    return phone.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-  }
-  return phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-};
+
+// ✨ Função para formatar o telefone corrigida (declarada apenas uma vez)
 const formatPhoneNumber = (value: string) => {
   if (!value) return "";
   const phone = value.replace(/\D/g, "");
@@ -38,7 +31,7 @@ export default function Register() {
   const parseServices = (text: string) => {
     return text
       .split("\n")
-      .map((row, index) => row.trim())
+      .map((row) => row.trim())
       .filter(Boolean)
       .map((row, index) => {
         const [name, price, duration] = row.split("|").map(part => part.trim());
@@ -101,7 +94,7 @@ export default function Register() {
             <p className="text-gray-400">Cadastre seu salão e adicione fotos, serviços e horários de funcionamento.</p>
           </div>
 
-          <div className="glass border border-white/10 rounded-[2.5rem] p-8 md:p-12">
+          <div className="glass border border-white/10 rounded-[2.5rem] p-8 md:p-12 bg-white/5 backdrop-blur-md">
              <form onSubmit={handleRegister} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -112,7 +105,7 @@ export default function Register() {
                       placeholder="Seu nome" 
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all" 
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-white" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -123,7 +116,7 @@ export default function Register() {
                       placeholder="exemplo@gmail.com" 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all" 
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-white" 
                     />
                   </div>
                 </div>
@@ -136,7 +129,7 @@ export default function Register() {
                     placeholder="Ex: Studio D´Luxo" 
                     value={formData.salonName}
                     onChange={(e) => setFormData({...formData, salonName: e.target.value})}
-                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all" 
+                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-white" 
                   />
                 </div>
 
@@ -159,7 +152,7 @@ export default function Register() {
                       value={serviceText}
                       onChange={(e) => setServiceText(e.target.value)}
                       rows={5}
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-sm"
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-sm text-white"
                       placeholder="Cada linha: Nome do Serviço | Preço | Duração em minutos"
                     />
                     <p className="text-xs text-gray-500">Ex: Corte Masculino | 45 | 40</p>
@@ -170,8 +163,7 @@ export default function Register() {
                       value={businessHours}
                       onChange={(e) => setBusinessHours(e.target.value)}
                       rows={4}
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-sm"
-                      placeholder="Seg-Sex: 09:00 - 19:00\nSáb: 09:00 - 14:00"
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-sm text-white"
                     />
                   </div>
                 </div>
@@ -181,36 +173,36 @@ export default function Register() {
                     <label className="text-sm font-bold text-gray-400 ml-1">WhatsApp</label>
                     <input 
                       required 
-                      type="tel" 
+                      type="text" 
                       placeholder="(00) 00000-0000" 
                       value={formatPhoneNumber(formData.phone)}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all" 
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-white" 
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-400 ml-1">Senha</label>
+                    <label className="text-sm font-bold text-gray-400 ml-1">Senha de Acesso</label>
                     <input 
                       required 
                       type="password" 
-                      placeholder="••••••••" 
+                      placeholder="Mínimo 6 caracteres" 
                       value={formData.password}
                       onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all" 
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-white" 
                     />
                   </div>
                 </div>
 
                 <button 
                   type="submit"
-                  className="w-full py-5 premium-gradient text-white font-black rounded-2xl shadow-[0_10px_30px_rgba(168,85,247,0.3)] hover:scale-[1.02] transition-all text-lg mt-8"
+                  className="w-full py-4 mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all text-center"
                 >
-                  Cadastrar Salão
+                  Solicitar Cadastro 🚀
                 </button>
              </form>
           </div>
         </div>
       </div>
     </main>
-  );
+   );
 }

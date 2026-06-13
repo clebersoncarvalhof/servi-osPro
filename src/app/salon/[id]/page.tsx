@@ -1,104 +1,186 @@
-"use client";
+'use client';
 
-import Navbar from "@/components/navbar";
-import Link from "next/link";
-import { useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { getSalons, Salon } from "@/lib/storage";
 
-// Criamos o componente que lê os dados de forma isolada
-function BookingSuccessContent() {
-  const searchParams = useSearchParams();
-
-  const nomeCliente = searchParams.get("nome") || "Cliente";
-  const telefoneCliente = searchParams.get("telefone") || "11999999999";
-  const servico = searchParams.get("servico") || "Serviço Selecionado";
-  const dataHora = searchParams.get("dataHora") || "Horário Agendado";
-  const local = searchParams.get("local") || "Studio D´Luxo";
-  const protocolo = searchParams.get("protocolo") || "#PRO-" + Math.floor(100000 + Math.random() * 900000);
-
-  useEffect(() => {
-    if (!searchParams.get("nome")) return;
-
-    const telefoneLimpo = telefoneCliente.replace(/\D/g, "");
-
-    const mensagemTexto = 'Olá, *' + nomeCliente + '*!\n\n' +
-                          'Seu agendamento no *' + local + '* foi realizado com sucesso! 🎉\n\n' +
-                          '📌 *Serviço:* ' + servico + '\n' +
-                          '📅 *Data e Hora:* ' + dataHora + '\n' +
-                          '🆔 *Protocolo:* ' + protocolo + '\n\n' +
-                          'Te esperamos lá! 💈';
-
-    const textoMensagem = encodeURIComponent(mensagemTexto);
-    const url = 'https://whatsapp.com' + telefoneLimpo + '&text=' + textoMensagem;
-
-    if (typeof window !== 'undefined') {
-      window.open(url, '_blank');
-    }
-  }, [searchParams, nomeCliente, telefoneCliente, local, servico, dataHora, protocolo]);
-
-  return (
-    <main className="bg-black min-h-screen text-white">
-      <Navbar />
-      
-      <div className="max-w-3xl mx-auto px-4 pt-40 pb-20 text-center">
-        <div className="w-24 h-24 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 animate-bounce">
-          ✓
-        </div>
-        
-        <h1 className="text-4xl md:text-6xl font-black mb-6">Agendamento Realizado!</h1>
-        <p className="text-xl text-gray-400 mb-12">
-          Seu horário foi reservado com sucesso. Você receberá um lembrete em breve.
-        </p>
-        
-        <div className="glass border border-white/10 rounded-[2rem] p-8 mb-12 text-left space-y-6">
-           <div className="flex justify-between items-center border-b border-white/5 pb-4">
-              <span className="text-gray-500">Protocolo</span>
-              <span className="font-mono font-bold">{protocolo}</span>
-           </div>
-           <div className="grid grid-cols-2 gap-8">
-              <div>
-                <div className="text-xs text-primary font-bold uppercase tracking-widest mb-1">Local</div>
-                <div className="font-bold">{local}</div>
-              </div>
-              <div>
-                <div className="text-xs text-primary font-bold uppercase tracking-widest mb-1">Data e Hora</div>
-                <div className="font-bold">{dataHora}</div>
-              </div>
-           </div>
-           
-           <div className="border-t border-white/5 pt-4">
-              <div className="text-xs text-primary font-bold uppercase tracking-widest mb-1">Serviço Selecionado</div>
-              <div className="font-bold text-gray-300">{servico}</div>
-           </div>
-
-           <div className="pt-4 flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-2xl">
-                📱
-              </div>
-              <p className="text-sm text-gray-400">
-                Enviamos a confirmação para o WhatsApp de *{nomeCliente}*.
-              </p>
-           </div>
-        </div>
-        
-        <div className="flex flex-col md:flex-row gap-4 justify-center">
-          <Link href="/" className="px-10 py-5 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all">
-            Ir para Meus Agendamentos
-          </Link>
-          <Link href="/" className="px-10 py-5 glass border border-white/10 text-white font-bold rounded-2xl hover:bg-white/5 transition-all">
-            Voltar ao Início
-          </Link>
-        </div>
-      </div>
-    </main>
-  );
+interface Servico {
+  id: string;
+  nome: string;
+  preco: string;
 }
 
-// O Next.js exige exportar o componente principal envolvido em Suspense para gerar páginas estáticas na nuvem
-export default function BookingSuccess() {
+export default function SalaoDetalhesPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  
+  const [salaoData, setSalaoData] = useState<Salon | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [servicosSelecionados, setServicosSelecionados] = useState<string[]>([]);
+  const [dataSelecionada, setDataSelecionada] = useState('');
+  const [horarioSelecionado, setHorarioSelecionado] = useState('');
+  const [proximasDatas, setProximasDatas] = useState<{ original: string; formatada: string }[]>([]);
+
+  // Carrega os dados reais do estabelecimento clicado usando o ID da URL
+  useEffect(() => {
+    const listaSalons = getSalons();
+    const salaoEncontrado = listaSalons.find(s => String(s.id) === String(id));
+    
+    if (salaoEncontrado) {
+      setSalaoData(salaoEncontrado);
+    }
+    setCarregando(false);
+  }, [id]);
+
+  // Lista dinâmica de serviços
+  const servicos: Servico[] = [
+    { id: 's1', nome: "Corte de Cabelo Masculino", preco: "R$ 45,00" },
+    { id: 's2', nome: "Barba Completa", preco: "R$ 35,00" },
+    { id: 's3', nome: "Sobrancelha", preco: "R$ 15,00" }
+  ];
+
+  const horariosDisponiveis = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
+
+  // Gera as 7 datas
+  useEffect(() => {
+    const datas = [];
+    const hoje = new Date();
+    for (let i = 0; i < 7; i++) {
+      const novaData = new Date(hoje);
+      novaData.setDate(hoje.getDate() + i);
+      const ano = novaData.getFullYear();
+      const mes = String(novaData.getMonth() + 1).padStart(2, '0');
+      const dia = String(novaData.getDate()).padStart(2, '0');
+      datas.push({
+        original: `${ano}-${mes}-${dia}`,
+        formatada: novaData.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })
+      });
+    }
+    setProximasDatas(datas);
+    if (datas.length > 0) setDataSelecionada(datas[0].original);
+  }, []);
+
+  const alternarServico = (idServico: string) => {
+    if (servicosSelecionados.includes(idServico)) {
+      setServicosSelecionados(servicosSelecionados.filter(sid => sid !== idServico));
+    } else {
+      setServicosSelecionados([...servicosSelecionados, idServico]);
+    }
+  };
+
+  const avancarParaIdentificacao = () => {
+    if (servicosSelecionados.length === 0) {
+      alert('Por favor, selecione pelo menos 1 serviço.');
+      return;
+    }
+    if (!horarioSelecionado) {
+      alert('Por favor, escolha o horário.');
+      return;
+    }
+
+    const nomesServicos = servicos
+      .filter(s => servicosSelecionados.includes(s.id))
+      .map(s => s.nome)
+      .join(', ');
+
+    const dataFormatadaExibicao = proximasDatas.find(d => d.original === dataSelecionada)?.formatada || dataSelecionada;
+    const nomeAtual = salaoData ? salaoData.name : "Estabelecimento";
+
+    router.push(
+      `/salon/${id}/identificacao?` +
+      `data=${encodeURIComponent(dataFormatadaExibicao)}` +
+      `&horario=${encodeURIComponent(horarioSelecionado)}` +
+      `&servicos=${encodeURIComponent(nomesServicos)}` +
+      `&salaoNome=${encodeURIComponent(nomeAtual)}`
+    );
+  };
+
+  if (carregando) {
+    return <div style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Carregando dados...</div>;
+  }
+
+  if (!salaoData) {
+    return <div style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Estabelecimento não encontrado.</div>;
+  }
+
   return (
-    <Suspense fallback={<div className="bg-black min-h-screen text-white text-center pt-40">Carregando confirmação...</div>}>
-      <BookingSuccessContent />
-    </Suspense>
+    <div style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', padding: '40px', fontFamily: 'sans-serif' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+        
+        {/* COLUNA ESQUERDA: Exibe os dados REAIS buscados da sua storage */}
+        <div style={{ backgroundColor: '#0f172a', padding: '32px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <span style={{ px: '3', py: '1', backgroundColor: '#a855f720', border: '1px solid #a855f740', color: '#a855f7', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase' }}>{salaoData.category}</span>
+            <span style={{ color: '#eab308', fontWeight: 'bold' }}>★ {salaoData.rating}</span>
+          </div>
+          <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px' }}>{salaoData.name}</h1>
+          <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px' }}>📍 {salaoData.address} - {salaoData.city}</p>
+          
+          <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px', color: '#a855f7' }}>Nossos Serviços</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {servicos.map((servico) => {
+              const selecionado = servicosSelecionados.includes(servico.id);
+              return (
+                <div
+                  key={servico.id}
+                  onClick={() => alternarServico(servico.id)}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: selecionado ? '2px solid #9333ea' : '1px solid #1e293b',
+                    backgroundColor: selecionado ? '#1e1b4b' : '#020617',
+                    cursor: 'pointer',
+                    transition: '0.2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <input type="checkbox" checked={selecionado} readOnly style={{ accentColor: '#9333ea' }} />
+                    <span>{servico.nome}</span>
+                  </div>
+                  <span style={{ fontWeight: 'bold', color: '#a855f7' }}>{servico.preco}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* COLUNA DIREITA */}
+        <div style={{ backgroundColor: '#0f172a', padding: '32px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Agendar Horário</h2>
+          
+          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '20px' }}>
+            {proximasDatas.map((dt) => (
+              <button
+                key={dt.original}
+                onClick={() => { setDataSelecionada(dt.original); setHorarioSelecionado(''); }}
+                style={{ padding: '10px 14px', borderRadius: '6px', border: '1px solid #1e293b', backgroundColor: dataSelecionada === dt.original ? '#9333ea' : '#020617', color: 'white', cursor: 'pointer' }}
+              >
+                {dt.formatada}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '32px' }}>
+            {horariosDisponiveis.map((horario) => (
+              <button
+                key={horario}
+                onClick={() => setHorarioSelecionado(horario)}
+                style={{ padding: '12px', borderRadius: '6px', border: '1px solid #1e293b', backgroundColor: horarioSelecionado === horario ? '#9333ea' : '#020617', color: 'white', cursor: 'pointer' }}
+              >
+                {horario}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={avancarParaIdentificacao} style={{ width: '100%', padding: '16px', backgroundColor: '#22c55e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+            Avançar para Identificação
+          </button>
+        </div>
+
+      </div>
+    </div>
   );
 }

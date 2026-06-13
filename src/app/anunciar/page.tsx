@@ -1,263 +1,167 @@
 "use client";
 
 import Navbar from "@/components/navbar";
-import { useState } from "react";
-import Link from "next/link";
-import { saveSalonRequest } from "@/lib/storage";
-import { formatPhoneNumber } from "@/lib/notifications";
+import { useState, useEffect } from "react";
+import { getAllSalonsData, getAllBookingsData, updateStatusAction, toggleFeaturedAction, changeSalonPasswordAction } from "./actions";
 
-export default function RegisterProfessional() {
-  const [step, setStep] = useState(1);
-  const [success, setSuccess] = useState(false);
-  const [formData, setFormData] = useState({
-    salonName: "",
-    city: "",
-    category: "Cabeleireiro",
-    address: "",
-    ownerName: "",
-    phone: "",
-    email: "",
-    password: "",
-    imageUrls: [] as string[],
-  });
+export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState<"solicitacoes" | "agendamentos" | "senhas">("solicitacoes");
+  const [salons, setSalons] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [password, setPassword] = useState("");
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [authError, setAuthError] = useState("");
+  
+  // Estados para alteração de senha
+  const [selectedOwnerId, setSelectedOwnerId] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+  useEffect(() => {
+    const authorized = localStorage.getItem("servicos_pro_admin_authenticated") === "true";
+    setIsAuthorized(authorized);
+    if (authorized) {
+      carregarDados();
+    }
+  }, []);
 
-    Promise.all(
-      files.map((file) => {
-        return new Promise<string | null>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            resolve(typeof reader.result === "string" ? reader.result : null);
-          };
-          reader.readAsDataURL(file);
-        });
-      })
-    ).then((images) => {
-      const urls = images.filter(Boolean) as string[];
-      setFormData({ ...formData, imageUrls: urls });
-    });
+  const carregarDados = async () => {
+    const resSalons = await getAllSalonsData();
+    const resBookings = await getAllBookingsData();
+    if (resSalons.success) setSalons(resSalons.data);
+    if (resBookings.success) setBookings(resBookings.data);
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newRequest = {
-      id: Date.now().toString(),
-      name: formData.salonName,
-      category: formData.category,
-      city: formData.city,
-      address: formData.address,
-      description: `Bem-vindo ao ${formData.salonName}! Especialistas em beleza e bem-estar.`,
-      imageUrl: formData.imageUrls[0],
-      imageUrls: formData.imageUrls,
-      services: [
-        { id: "s1", name: "Corte Masculino", price: "45,00", duration: "40" },
-        { id: "s2", name: "Barba Tradicional", price: "35,00", duration: "30" }
-      ],
-      email: formData.email,
-      phone: formData.phone,
-      contactName: formData.ownerName,
-      password: formData.password,
-      status: "pending" as const,
-      submittedAt: Date.now(),
-    };
-    
-    saveSalonRequest(newRequest);
-    setSuccess(true);
+    if (password === "admin123") {
+      localStorage.setItem("servicos_pro_admin_authenticated", "true");
+      setIsAuthorized(true);
+      setAuthError("");
+      carregarDados();
+    } else {
+      setAuthError("Senha incorreta.");
+    }
   };
 
-  if (success) {
-    return (
-      <main className="bg-black min-h-screen text-white">
-        <Navbar />
-        <div className="max-w-3xl mx-auto px-4 pt-40 pb-20 text-center">
-          <div className="w-24 h-24 bg-blue-500/20 text-blue-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-8">
-            📋
-          </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-6">Pedido Enviado! 🎉</h1>
-          <p className="text-xl text-gray-400 mb-4">
-            Seu salão <strong>{formData.salonName}</strong> foi enviado para aprovação.
-          </p>
-          <p className="text-gray-500 mb-12">
-            Em breve um administrador analisará seu cadastro e você receberá uma confirmação.
-          </p>
-          <Link href="/" className="px-8 py-4 bg-primary text-black font-black rounded-2xl hover:opacity-90 transition-all inline-block">
-            Ir para Home
-          </Link>
-        </div>
-      </main>
-    );
-  }
+  const handleStatus = async (id: string, status: string) => {
+    const res = await updateStatusAction(id, status);
+    if (res.success) carregarDados();
+  };
+
+  const handleToggleFeatured = async (id: string, current: boolean) => {
+    const res = await toggleFeaturedAction(id, current);
+    if (res.success) carregarDados();
+  };
+
+  const handlePasswordChangeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOwnerId || !newPassword) return alert("Selecione o usuário e digite a nova senha.");
+    const res = await changeSalonPasswordAction(selectedOwnerId, newPassword);
+    if (res.success) {
+      alert("Senha alterada com sucesso!");
+      setNewPassword("");
+      setSelectedOwnerId("");
+    } else {
+      alert("Erro ao alterar senha.");
+    }
+  };
 
   return (
     <main className="bg-black min-h-screen text-white">
       <Navbar />
-      
-      <div className="relative pt-32 pb-20 px-4">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-primary/10 blur-[150px] -z-10" />
-        
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tighter">
-              Traga seu negócio para o <span className="text-primary">ServiçosPro</span>
-            </h1>
-            <p className="text-gray-400 text-lg">
-              Receba agendamentos online e organize sua agenda agora mesmo.
-            </p>
-          </div>
-
-          <div className="glass border border-white/10 rounded-[2.5rem] p-8 md:p-12">
-             <form onSubmit={handleRegister} className="space-y-6">
-                {step === 1 ? (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                    <h3 className="text-xl font-bold border-b border-white/5 pb-4 mb-8">Informações do Salão</h3>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-gray-400 ml-1">Nome do Estabelecimento</label>
-                      <input 
-                        required
-                        type="text" 
-                        placeholder="Ex: Studio D´Luxo"
-                        value={formData.salonName}
-                        onChange={(e) => setFormData({...formData, salonName: e.target.value})}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none text-white transition-all"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-400 ml-1">Cidade</label>
-                        <input 
-                          required
-                          type="text" 
-                          placeholder="Sua cidade"
-                          value={formData.city}
-                          onChange={(e) => setFormData({...formData, city: e.target.value})}
-                          className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none text-white transition-all"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-400 ml-1">Categoria Principal</label>
-                        <select 
-                          value={formData.category}
-                          onChange={(e) => setFormData({...formData, category: e.target.value})}
-                          className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none text-white transition-all appearance-none cursor-pointer"
-                        >
-                          <option value="Cabeleireiro" className="bg-black">Cabeleireiro</option>
-                          <option value="Barba" className="bg-black">Barbearia</option>
-                          <option value="Estética" className="bg-black">Estética</option>
-                          <option value="Manicure" className="bg-black">Manicure</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-gray-400 ml-1">Endereço Completo</label>
-                      <input 
-                        required
-                        type="text" 
-                        placeholder="Rua, número, bairro..."
-                        value={formData.address}
-                        onChange={(e) => setFormData({...formData, address: e.target.value})}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none text-white transition-all"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-gray-400 ml-1">Fotos do Salão</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handlePhotoChange}
-                        className="w-full text-gray-200 file:border-0 file:bg-white/10 file:text-white file:px-4 file:py-3 file:rounded-2xl bg-white/5 border border-white/10 rounded-2xl text-sm"
-                      />
-                      {formData.imageUrls.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
-                          {formData.imageUrls.map((url, index) => (
-                            <img key={index} src={url} alt={`Foto ${index + 1}`} className="h-48 w-full object-cover rounded-3xl border border-white/10" />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <button 
-                      type="button"
-                      onClick={() => setStep(2)}
-                      className="w-full py-5 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all text-lg mt-8"
-                    >
-                      Próximo Passo
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                    <h3 className="text-xl font-bold border-b border-white/5 pb-4 mb-4">Seus Dados de Acesso</h3>
-                    <button type="button" onClick={() => setStep(1)} className="text-primary text-sm font-bold hover:underline mb-8 block">
-                      ← Voltar para dados do salão
-                    </button>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-gray-400 ml-1">Nome do Responsável</label>
-                      <input 
-                        required
-                        type="text" 
-                        placeholder="Seu nome completo"
-                        value={formData.ownerName}
-                        onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none text-white transition-all"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-gray-400 ml-1">WhatsApp / Celular</label>
-                      <input 
-                        required
-                        type="tel" 
-                        placeholder="(00) 00000-0000"
-                        value={formatPhoneNumber(formData.phone)}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none text-white transition-all"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-gray-400 ml-1">E-mail Profissional</label>
-                      <input 
-                        required
-                        type="email" 
-                        placeholder="contato@seusalao.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none text-white transition-all"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-gray-400 ml-1">Criar Senha</label>
-                      <input 
-                        required
-                        type="password" 
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none text-white transition-all"
-                      />
-                    </div>
-
-                    <button 
-                      type="submit"
-                      className="w-full py-5 premium-gradient text-white font-black rounded-2xl shadow-[0_10px_30px_rgba(168,85,247,0.4)] hover:scale-[1.02] transition-all text-lg mt-8"
-                    >
-                      Finalizar e Acessar Agora
-                    </button>
-                  </div>
-                )}
-             </form>
+      <div className="max-w-7xl mx-auto px-4 pt-32 pb-20">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-black tracking-tighter">Gestão Avançada</h1>
+            <p className="text-gray-400">Controle total da plataforma ServiçosPro.</p>
           </div>
         </div>
+
+        {!isAuthorized ? (
+          <div className="glass border border-white/10 rounded-[3rem] p-10 max-w-xl mx-auto bg-white/5">
+            <h2 className="text-2xl font-black mb-4">Acesso Restrito</h2>
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha mestre do admin" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none" />
+              {authError && <p className="text-red-500 text-sm">{authError}</p>}
+              <button type="submit" className="w-full py-4 bg-blue-600 font-bold rounded-2xl">Entrar</button>
+            </form>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Menu de Abas */}
+            <div className="flex gap-4 border-b border-white/10 pb-2">
+              <button onClick={() => setActiveTab("solicitacoes")} className={`pb-2 px-4 font-bold transition-all ${activeTab === "solicitacoes" ? "text-blue-400 border-b-2 border-blue-400" : "text-gray-400"}`}>Solicitações & Destaques</button>
+              <button onClick={() => setActiveTab("agendamentos")} className={`pb-2 px-4 font-bold transition-all ${activeTab === "agendamentos" ? "text-blue-400 border-b-2 border-blue-400" : "text-gray-400"}`}>Agendamentos de Clientes</button>
+              <button onClick={() => setActiveTab("senhas")} className={`pb-2 px-4 font-bold transition-all ${activeTab === "senhas" ? "text-blue-400 border-b-2 border-blue-400" : "text-gray-400"}`}>Alterar Senhas</button>
+            </div>
+
+            {/* ABA 1: SOLICITAÇÕES E DESTAQUE NA PÁGINA PRINCIPAL */}
+            {activeTab === "solicitacoes" && (
+              <div className="grid grid-cols-1 gap-4">
+                {salons.map((salon) => (
+                  <div key={salon.id} className="border border-white/10 bg-white/5 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold">{salon.name} <span className="text-xs text-gray-500">({salon.status})</span></h3>
+                      <p className="text-sm text-gray-400">{salon.category} • {salon.city}</p>
+                      <p className="text-xs text-blue-400 mt-1">Dono: {salon.owner?.name} ({salon.owner?.email})</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleToggleFeatured(salon.id, salon.featured || false)} className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${salon.featured ? "bg-amber-500 text-black border-amber-500" : "border-white/10 text-gray-400"}`}>
+                        {salon.featured ? "⭐ Destacado na Home" : "Colocar na Home"}
+                      </button>
+                      {salon.status === "PENDING" && (
+                        <>
+                          <button onClick={() => handleStatus(salon.id, "REJECTED")} className="px-4 py-2 bg-red-500/10 text-red-400 rounded-xl text-xs font-bold">Recusar</button>
+                          <button onClick={() => handleStatus(salon.id, "APPROVED")} className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold">Aprovar</button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ABA 2: AGENDAMENTOS DOS CLIENTES */}
+            {activeTab === "agendamentos" && (
+              <div className="grid grid-cols-1 gap-4">
+                {bookings.length === 0 ? (
+                  <p className="text-gray-500 p-4">Nenhum agendamento realizado no sistema ainda.</p>
+                ) : (
+                  bookings.map((b) => (
+                    <div key={b.id} className="border border-white/10 bg-white/5 rounded-2xl p-4 flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-white">Cliente: {b.client?.name || "Visitante"}</p>
+                        <p className="text-sm text-gray-400">Salão: {b.salon?.name} • Serviço: {b.service?.name}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold rounded-full">
+                          {new Date(b.dateTime).toLocaleDateString("pt-BR")} às {new Date(b.dateTime).toLocaleTimeString("pt-BR", {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* ABA 3: ALTERAR SENHA DE PROFISSIONAIS */}
+            {activeTab === "senhas" && (
+              <div className="glass border border-white/10 rounded-2xl p-6 bg-white/5 max-w-xl">
+                <h3 className="text-lg font-bold mb-4">Mudar Senha de Estabelecimento</h3>
+                <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
+                  <select value={selectedOwnerId} onChange={(e) => setSelectedOwnerId(e.target.value)} className="w-full p-4 bg-black border border-white/10 rounded-xl text-white outline-none">
+                    <option value="">Selecione o profissional/salão...</option>
+                    {salons.map((s) => (
+                      <option key={s.id} value={s.owner?.id}>{s.name} ({s.owner?.email})</option>
+                    ))}
+                  </select>
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Digite a nova senha para este usuário" className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none" />
+                  <button type="submit" className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all">Atualizar Senha no Banco 🚀</button>
+                </form>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </main>
   );
