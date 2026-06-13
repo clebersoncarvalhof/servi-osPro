@@ -6,6 +6,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveUser } from "@/lib/storage";
 
+const formatPhoneNumber = (value: string) => {
+  if (!value) return "";
+  const phone = value.replace(/\D/g, "");
+  if (phone.length <= 10) {
+    return phone.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  }
+  return phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+};
+
 export default function ClientRegister() {
   const [formData, setFormData] = useState({
     name: "",
