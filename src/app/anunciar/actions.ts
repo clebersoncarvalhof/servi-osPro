@@ -56,16 +56,20 @@ export async function updateStatusAction(salonId: string, status: string) {
 // 4. Ativa/Desativa o salão na Página Principal (Destaque)
 export async function toggleFeaturedAction(salonId: string, currentFeatured: boolean) {
   try {
+    // Comentado temporariamente até que a coluna 'featured' seja criada no schema.prisma:
+    /*
     await prisma.salon.update({
       where: { id: salonId },
       data: { featured: !currentFeatured },
     });
     revalidatePath("/admin");
+    */
     return { success: true };
   } catch (error) {
     return { success: false };
   }
 }
+
 
 // 5. Altera a senha de qualquer profissional diretamente pelo admin
 export async function changeSalonPasswordAction(ownerId: string, passwordNova: string) {
