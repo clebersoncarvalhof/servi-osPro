@@ -107,10 +107,10 @@ export default function SalaoDetalhesPage() {
     <div style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', padding: '40px', fontFamily: 'sans-serif' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
         
-        {/* COLUNA ESQUERDA: Exibe os dados REAIS buscados da sua storage */}
+        {/* COLUNA ESQUERDA */}
         <div style={{ backgroundColor: '#0f172a', padding: '32px', borderRadius: '12px', border: '1px solid #1e293b' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <span style={{ px: '3', py: '1', backgroundColor: '#a855f720', border: '1px solid #a855f740', color: '#a855f7', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase' }}>{salaoData.category}</span>
+            <span style={{ backgroundColor: '#a855f720', border: '1px solid #a855f740', color: '#a855f7', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase' }}>{salaoData.category}</span>
             <span style={{ color: '#eab308', fontWeight: 'bold' }}>★ {salaoData.rating}</span>
           </div>
           <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px' }}>{salaoData.name}</h1>
