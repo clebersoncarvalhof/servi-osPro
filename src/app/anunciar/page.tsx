@@ -4,7 +4,7 @@ import Navbar from "@/components/navbar";
 import { useState, useEffect } from "react";
 import { getAllSalonsData, getAllBookingsData, updateStatusAction, toggleFeaturedAction, changeSalonPasswordAction } from "./actions";
 
-export default function AdminPage() {
+export default function AnunciarPage() {
   const [activeTab, setActiveTab] = useState<"solicitacoes" | "agendamentos" | "senhas">("solicitacoes");
   const [salons, setSalons] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -150,13 +150,23 @@ export default function AdminPage() {
                 <h3 className="text-lg font-bold mb-4">Mudar Senha de Estabelecimento</h3>
                 <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
                   <select value={selectedOwnerId} onChange={(e) => setSelectedOwnerId(e.target.value)} className="w-full p-4 bg-black border border-white/10 rounded-xl text-white outline-none">
-                    <option value="">Selecione o profissional/salão...</option>
-                    {salons.map((s) => (
-                      <option key={s.id} value={s.owner?.id}>{s.name} ({s.owner?.email})</option>
+                    <option value="">Selecione o profissional</option>
+                    {salons.map((salon) => (
+                      <option key={salon.id} value={salon.ownerId || salon.id}>
+                        {salon.name} ({salon.owner?.email || "Sem e-mail"})
+                      </option>
                     ))}
                   </select>
-                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Digite a nova senha para este usuário" className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none" />
-                  <button type="submit" className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all">Atualizar Senha no Banco 🚀</button>
+                  <input 
+                    type="password" 
+                    value={newPassword} 
+                    onChange={(e) => setNewPassword(e.target.value)} 
+                    placeholder="Nova senha de acesso" 
+                    className="w-full p-4 bg-black border border-white/10 rounded-xl text-white outline-none" 
+                  />
+                  <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 font-bold rounded-xl transition-all">
+                    Confirmar Nova Senha
+                  </button>
                 </form>
               </div>
             )}

@@ -5,7 +5,7 @@ import Navbar from "@/components/navbar";
 import { useRouter } from "next/navigation";
 import { saveSalonRequest } from "@/lib/storage";
 
-// ✨ Função para formatar o telefone corrigida (declarada apenas uma vez)
+// ✨ Função para formatar o telefone corrigida
 const formatPhoneNumber = (value: string) => {
   if (!value) return "";
   const phone = value.replace(/\D/g, "");
@@ -185,7 +185,7 @@ export default function Register() {
                     <input 
                       required 
                       type="password" 
-                      placeholder="Mínimo 6 caracteres" 
+                      placeholder="Crie uma senha" 
                       value={formData.password}
                       onChange={(e) => setFormData({...formData, password: e.target.value})}
                       className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:border-primary outline-none transition-all text-white" 
@@ -193,16 +193,13 @@ export default function Register() {
                   </div>
                 </div>
 
-                <button 
-                  type="submit"
-                  className="w-full py-4 mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all text-center"
-                >
-                  Solicitar Cadastro 🚀
+                <button type="submit" className="w-full py-4 bg-blue-600 font-bold rounded-2xl hover:bg-blue-700 transition-all text-white">
+                  Enviar para Aprovação
                 </button>
              </form>
           </div>
         </div>
       </div>
     </main>
-   );
+  );
 }
