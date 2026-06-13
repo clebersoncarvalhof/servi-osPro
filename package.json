@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install --legacy-peer-deps && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next eslint"
+    "lint": "next lint"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -15,17 +15,17 @@
     "framer-motion": "^11.0.8",
     "lucide-react": "^0.344.0",
     "next": "14.2.7",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "tailwind-merge": "^2.2.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "eslint": "^8",
     "eslint-config-next": "14.2.7",
     "prisma": "^5.10.0",
     "tailwindcss": "^4",
