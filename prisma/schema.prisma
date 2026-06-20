@@ -25,18 +25,26 @@ model Salon {
   description   String?
   address       String
   city          String
-  image         String?
   category      String         @default("Cabeleireiro")
   businessHours String?        
-  status        String         @default("PENDING") // ✨ Mudou de enum para String
+  status        String         @default("PENDING") 
   ownerId       String
   owner         User           @relation("SalonOwner", fields: [ownerId], references: [id])
   services      Service[]
   professionals Professional[]
   bookings      Booking[]
+  featured      Boolean        @default(false) 
+  images        String         @default("")    
+
+  // ➕ ADICIONE ESTES DOIS NOVOS CAMPOS AQUI:
+  phone         String         @default("") // WhatsApp do salão
+  instagram     String?        // Link do perfil ou @ do Instagram
+
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
+
+
 
 model Service {
   id            String         @id @default(cuid())
